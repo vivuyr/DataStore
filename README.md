@@ -51,4 +51,4 @@ end)
 
 ## License
 
-This repository does not declare a license in the source or project metadata. Add a license before redistributing it.
+This project is licensed under the MIT License.
