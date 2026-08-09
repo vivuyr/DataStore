@@ -16,13 +16,13 @@ DataStore.Start({
 })
 
 Players.PlayerAdded:Connect(function(player)
-	local session = playerStore.WaitForSession(player)
+	local session = playerStore:WaitForSession(player)
 	if not session then
 		return
 	end
 
 	session.Profile.Data.Coins += 10
-	session.Save("Normal")
+	session:Save("Normal")
 end)
 ```
 

@@ -22,6 +22,6 @@ ProfileStore's `OnSessionEnd` signal is observed when `KickIfSessionLost` is ena
 
 ## Invalid settings
 
-`WaitTimeout < 0` logs a warning but then will be changed to WaitTimeout * -1. `SessionLostMessage` is validated at session-loss time; a non-string value falls back to the default message. Logging settings only control warnings and do not throw errors.
+`WaitTimeout < 0` logs a warning and converts the value to its positive equivalent. `SessionLostMessage` is validated at session-loss time; a non-string value falls back to the default message. Logging settings only control warnings and do not throw errors.
 
 ProfileStore errors and critical-state changes are forwarded to the module's logging helper.

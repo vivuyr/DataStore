@@ -10,7 +10,7 @@ local store = DataStore.New("PlayerData", { Coins = 0 })
 DataStore.Start({ { Store = store } })
 
 Players.PlayerAdded:Connect(function(player)
-	local data = store.WaitForData(player)
+	local data = store:WaitForData(player)
 	if data then
 		data.Coins += 1
 	end
@@ -31,7 +31,7 @@ DataStore.Start({
 ## Manual session start
 
 ```lua
-local session = store.StartSessionAsync(player, { Steal = false })
+local session = store:StartSessionAsync(player, { Steal = false })
 if session then
 	print(session.Profile.Key)
 end
@@ -40,7 +40,7 @@ end
 ## Using `WaitForProfile`
 
 ```lua
-local profile = store.WaitForProfile(player)
+local profile = store:WaitForProfile(player)
 if profile then
 	profile.Data.Coins += 25
 end
@@ -49,7 +49,7 @@ end
 ## Using `WaitForData`
 
 ```lua
-local data = store.WaitForData(player)
+local data = store:WaitForData(player)
 if data then
 	print("Coins:", data.Coins)
 end
@@ -58,8 +58,8 @@ end
 ## Checking sessions
 
 ```lua
-if store.HasSession(player) then
-	local session = store.GetSession(player)
+if store:HasSession(player) then
+	local session = store:GetSession(player)
 	if session then
 		print(session.Profile.Data.Coins)
 	end
@@ -69,13 +69,13 @@ end
 ## Saving profiles
 
 ```lua
-local session = store.GetSession(player)
+local session = store:GetSession(player)
 if session then
-	local saved = session.Save("High")
+	local saved = session:Save("High")
 	print("Save requested:", saved == true)
 end
 
-local allSaved = store.SaveAll()
+local allSaved = store:SaveAll()
 ```
 
 ## Accessing ProfileStore directly

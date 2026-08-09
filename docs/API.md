@@ -61,107 +61,107 @@ Looks up a store by name.
 
 ## Store
 
-### `StartSessionAsync(player, params?)`
+### `Store:StartSessionAsync(player, params?)`
 
 Starts a ProfileStore session using the player's `UserId` converted to a string key, adds the user ID, and reconciles the profile.
 
-- **Parameters:** `player: Player`; optional `params: { Steal: boolean? }`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`; optional `params: { Steal: boolean? }`.
 - **Returns:** `ProfileSession<T>?`.
-- **Example:** `local session = store.StartSessionAsync(player)`.
+- **Example:** `local session = store:StartSessionAsync(player)`.
 - **Notes:** A session-loss connection may kick the player when enabled.
 - **Nil:** returned when ProfileStore cannot start the session.
 
-### `WaitForSession(player)`
+### `Store:WaitForSession(player)`
 
 Waits for a player's session to appear.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `ProfileSession<T>?`.
-- **Example:** `local session = store.WaitForSession(player)`.
+- **Example:** `local session = store:WaitForSession(player)`.
 - **Notes:** Uses `Settings.WaitTimeout` first, then continues waiting when the timeout is absent. Stops if the player leaves.
 - **Nil:** returned after timeout, when the player leaves, or when no session becomes available.
 
-### `WaitForProfile(player)`
+### `Store:WaitForProfile(player)`
 
 Waits for a session and returns its profile.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `Profile<T>?`.
-- **Example:** `local profile = store.WaitForProfile(player)`.
+- **Example:** `local profile = store:WaitForProfile(player)`.
 - **Notes:** Delegates waiting to `WaitForSession`.
 - **Nil:** returned when no session is available.
 
-### `WaitForData(player)`
+### `Store:WaitForData(player)`
 
 Waits for a profile and returns its data.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `(T & JSONAcceptable)?`.
-- **Example:** `local data = store.WaitForData(player)`.
+- **Example:** `local data = store:WaitForData(player)`.
 - **Notes:** This is a blocking wait according to the configured wait behavior.
 - **Nil:** returned when no profile can be obtained.
 
-### `GetSession(player)`
+### `Store:GetSession(player)`
 
 Returns a loaded session without waiting.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `ProfileSession<T>?`.
-- **Example:** `local session = store.GetSession(player)`.
+- **Example:** `local session = store:GetSession(player)`.
 - **Notes:** Logs when no session is found.
 - **Nil:** returned if the player has no loaded session.
 
-### `GetProfile(player)`
+### `Store:GetProfile(player)`
 
 Returns a loaded profile without waiting.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `Profile<T>?`.
-- **Example:** `local profile = store.GetProfile(player)`.
+- **Example:** `local profile = store:GetProfile(player)`.
 - **Notes:** Delegates to `GetSession`.
 - **Nil:** returned if no session is loaded.
 
-### `GetData(player)`
+### `Store:GetData(player)`
 
 Returns loaded profile data without waiting.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `(T & JSONAcceptable)?`.
-- **Example:** `local data = store.GetData(player)`.
+- **Example:** `local data = store:GetData(player)`.
 - **Notes:** Logs when data is unavailable.
 - **Nil:** returned if no profile is loaded.
 
-### `GetLoadedProfiles()`
+### `Store:GetLoadedProfiles()`
 
-Returns the store's loaded sessions keyed by numeric `UserId`.
+Returns a copy of the store's loaded session information keyed by numeric `UserId`.
 
-- **Parameters:** none.
-- **Returns:** `{ [number]: ProfileSession<T> }`.
-- **Example:** `for userId, session in pairs(store.GetLoadedProfiles()) do print(userId) end`.
-- **Notes:** The returned table is the live session table.
+- **Parameters:** `self: StoreImplementation<T>`.
+- **Returns:** `{ [number]: SessionInfo<T> }`.
+- **Example:** `for userId, sessionInfo in pairs(store:GetLoadedProfiles()) do print(userId) end`.
+- **Notes:** The returned table is a shallow copy of the store's internal session table. Changes to the returned table do not modify the internal registry.
 - **Nil:** never returns `nil`.
 
-### `HasSession(player)`
+### `Store:HasSession(player)`
 
 Checks whether a player has a loaded session.
 
-- **Parameters:** `player: Player`.
+- **Parameters:** `self: StoreImplementation<T>`; `player: Player`.
 - **Returns:** `boolean`.
-- **Example:** `if store.HasSession(player) then ... end`.
+- **Example:** `if store:HasSession(player) then ... end`.
 - **Notes:** It does not wait.
 - **Nil:** never returns `nil`.
 
-### `SaveAll()`
+### `Store:SaveAll()`
 
 Calls `Profile:Save()` for every loaded session when its 60-second cooldown allows it.
 
-- **Parameters:** none.
+- **Parameters:** `self: StoreImplementation<T>`.
 - **Returns:** `true` when saves are issued; `nil` during cooldown.
-- **Example:** `local saved = store.SaveAll()`.
+- **Example:** `local saved = store:SaveAll()`.
 - **Notes:** The cooldown is shared by the store. The underlying ProfileStore save result is not returned.
 - **Nil:** returned while the cooldown is active.
 
 ## Profile session methods
 
-`session.Save(priority)` accepts `"Low"`, `"Normal"`, or `"High"`. `"High"` saves have no cooldown, `"Normal"` saves have a 10-second per-session cooldown, and `"Low"` saves have a 60-second per-session cooldown. Invalid priority values default to `"Low"`. The function returns `true` when a save is issued and may return `nil` if the cooldown for the selected priority is active.
-`session.EndSession()` ends the underlying session and removes it from the store's session table.
+`session:Save(priority)` accepts `"Low"`, `"Normal"`, or `"High"`. `"High"` saves have no cooldown, `"Normal"` saves have a 10-second per-session cooldown, and `"Low"` saves have a 60-second per-session cooldown. Invalid priority values default to `"Low"`. The function returns `true` when a save is issued and may return `nil` if the cooldown for the selected priority is active.
+`session:EndSession()` ends the underlying session and removes it from the store's session table.

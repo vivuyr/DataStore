@@ -1,8 +1,18 @@
 [package]
-name = "asus/datastore"
+name = "vivuyr/datastore"
 version = "0.1.0"
 registry = "https://github.com/UpliftGames/wally-index"
-realm = "shared"
+realm = "server"
+
+license = "MIT"
+authors = ["vivuyr"]
+
+description = "DataStore is a typed Roblox Luau wrapper around ProfileStore."
+
+repository = "https://github.com/vivuyr/DataStore"
+
+exclude = ["**"]
+include = ["src", "src/*", "default.project.json", "wally.lock", "wally.toml", "LICENSE"]
 
 [dependencies]
 

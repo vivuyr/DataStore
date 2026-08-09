@@ -18,7 +18,7 @@ Use `StartSessionAsync` for manual loading and `EndSession` when manually ending
 
 ## Save intentionally
 
-`session.Save()` uses priority-specific cooldowns, while `store.SaveAll()` has a 60-second cooldown. Both can return `nil`.
+`session:Save()` uses priority-specific cooldowns, while `store:SaveAll()` has a 60-second cooldown. Both can return `nil`.
 
 ## Use ProfileStore directly when needed
 

@@ -17,7 +17,7 @@ ProfileStore provides the persistence primitive. This library adds a small appli
 
 ## Installation
 
-See [Installation](docs/Installation.md).
+See [Installation](https://github.com/vivuyr/DataStore/blob/master/docs/Installation.md).
 
 ## Quick example
 
@@ -38,14 +38,16 @@ end)
 
 ## Documentation
 
-- [Getting started](docs/GettingStarted.md)
-- [Installation](docs/Installation.md)
-- [API reference](docs/API.md)
-- [Settings](docs/Settings.md)
-- [Types](docs/Types.md)
-- [Error handling](docs/ErrorHandling.md)
-- [Examples](docs/Examples.md)
-- [Best practices](docs/BestPractices.md)
+- [Github](https://github.com/vivuyr/DataStore)
+
+- [Getting started](https://github.com/vivuyr/DataStore/blob/master/docs/GettingStarted.md)
+- [Installation](https://github.com/vivuyr/DataStore/blob/master/docs/Installation.md)
+- [API reference](https://github.com/vivuyr/DataStore/blob/master/docs/API.md)
+- [Settings](https://github.com/vivuyr/DataStore/blob/master/docs/Settings.md)
+- [Types](https://github.com/vivuyr/DataStore/blob/master/docs/Types.md)
+- [Error handling](https://github.com/vivuyr/DataStore/blob/master/docs/ErrorHandling.md)
+- [Examples](https://github.com/vivuyr/DataStore/blob/master/docs/Examples.md)
+- [Best practices](https://github.com/vivuyr/DataStore/blob/master/docs/BestPractices.md)
 
 ## License
 

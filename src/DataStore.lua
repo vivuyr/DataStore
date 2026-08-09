@@ -1,7 +1,8 @@
 local Players = game:GetService("Players")
+local Packages = script.Parent.Parent
 local ServerScriptService = game:GetService("ServerScriptService")
 local DataStoreTypes = require(ServerScriptService.Server.DataStoreTypes)
-local ProfileStore = require(ServerScriptService.ServerPackages.ProfileStore)
+local ProfileStore = require(Packages.ProfileStore)
 
 export type JSONAcceptable = { JSONAcceptable } | { [string]: JSONAcceptable } | number | string | boolean | buffer
 
@@ -98,6 +99,7 @@ export type ProfileSession<T> = {
 	Profile: Profile<T>,
 	Save: (self: SessionImplementation<T>, priority: Priority) -> boolean?,
 	EndSession: (self: SessionImplementation<T>) -> (),
+	StoreName: StoreName,
 }
 
 export type DataStoreDefinition<T> = {
@@ -341,257 +343,6 @@ local function New<T>(storeName: StoreName, template: T & JSONAcceptable): DataS
 	IsReady()
 	local store: ProfileStore<T> = ProfileStore.New(storeName, template :: any)
 
-	--[[
-	local function NewStore(): DataStoreDefinition<T>
-		IsReady()
-		local store: ProfileStore<T> = ProfileStore.New(storeName, template :: any)
-
-		local SaveAllCooldown = nil
-
-		local StartSessionAsync = function(player: Player, params: SessionParams?): ProfileSession<T>?
-			local key = player.UserId
-			if StoreInfo.Keys[key] then
-				LogError(("[DataStore] %s already has an active session."):format(player.Name), true)
-				return
-			end
-			local profile = store:StartSessionAsync(tostring(key), params or {})
-			if not profile then
-				local text = player.Name or "Unknown"
-				LogError(("[DataStore] %s Unable to start session"):format(text), true)
-				return profile
-			end
-			profile:AddUserId(player.UserId)
-			profile:Reconcile()
-
-			local EndSession = function(): ()
-				if profile:IsActive() then
-					profile:EndSession()
-				end
-				StoreInfo.Keys[key] = nil
-			end
-
-			local SaveCooldown = nil
-
-			local Save = function(priority: Priority): boolean?
-				if not profile:IsActive() then
-					LogError(("[DataStore] Session (%s) is not active"):format(profile.Key))
-					return
-				end
-				local now = os.clock()
-				if priority ~= "Low" and priority ~= "Normal" and priority ~= "High" then
-					priority = "Low"
-				end
-				if not SaveCooldown or priority == "High" then
-					SaveCooldown = now + 60
-					profile:Save()
-					return true
-				end
-
-				local difference = now - SaveCooldown
-				if priority == "Normal" and difference > -50 or priority == "Low" and difference > 0 then
-					SaveCooldown = now + 60
-					profile:Save()
-					return true
-				end
-				LogError(("[DataStore] Time left on Save cooldown: %s"):format(-1 * difference))
-				return
-			end
-
-			if DataStore.Settings.KickIfSessionLost then
-				profile.OnSessionEnd:Connect(function()
-					local text = DataStore.Settings.SessionLostMessage
-					if type(text) ~= "string" then
-						text = "Your data session has ended. Please rejoin."
-					end
-					player:Kick(text)
-				end)
-			end
-
-			StoreInfo.Keys[key] = {
-				Profile = profile,
-				Save = Save,
-				EndSession = EndSession,
-			}
-			return {
-				Profile = profile,
-				Save = Save,
-				EndSession = EndSession,
-			}
-		end
-
-		local WaitForSession = function(player: Player): ProfileSession<T>?
-			local key = player.UserId
-			local keys = StoreInfo.Keys
-			local session = keys and StoreInfo.Keys[key]
-			if not session then
-				if DataStore.Settings.WaitTimeout then
-					local Security = DataStore.Settings.WaitTimeout
-					if type(Security) ~= "number" then
-						Security = 0
-					end
-					if Security < 0 then
-						Security *= -1
-						LogError("[DataStore] WaitTimeout is negative and is changed to (WaitTimeout) * -1", true)
-					end
-					if Security == 0 then
-						local text = player.Name or "Unknown"
-						LogError(("[DataStore] %s Session not found."):format(text))
-						return
-					elseif Security > 0 then
-						for _i = 1, Security do
-							task.wait(1)
-							if not player.Parent then
-								return
-							end
-							keys = StoreInfo.Keys
-							session = keys and StoreInfo.Keys[key]
-							if session then
-								return session
-							end
-						end
-						local text = player.Name or "Unknown"
-						LogError(("[DataStore] Waiting for %s session took too long"):format(text))
-						return
-					end
-				end
-				while true do
-					task.wait(1)
-					if not player.Parent then
-						return
-					end
-					keys = StoreInfo.Keys
-					session = keys and StoreInfo.Keys[key]
-					if session then
-						return session
-					end
-				end
-			end
-			return session
-		end
-
-		local WaitForProfile = function(player: Player): Profile<T>?
-			local session = WaitForSession(player)
-			if not session then
-				local text = player.Name or "Unknown"
-				LogError(("[DataStore] Waiting for %s profile took too long"):format(text))
-				return
-			end
-			return session.Profile
-		end
-
-		local WaitForData = function(player: Player): (T & JSONAcceptable)?
-			local profile = WaitForProfile(player)
-			if not profile then
-				local text = player.Name or "Unknown"
-				LogError(("[DataStore] %s Data not found."):format(text))
-				return
-			end
-			return profile.Data
-		end
-
-		local GetSession = function(player: Player): ProfileSession<T>?
-			local key = player.UserId
-			local keys = StoreInfo.Keys
-			local session = keys and StoreInfo.Keys[key]
-			if not session then
-				local text = player.Name or "Unknown"
-				LogError(("[DataStore] %s Session not found."):format(text))
-				return
-			end
-			return session
-		end
-
-		local GetProfile = function(player: Player): Profile<T>?
-			local session = GetSession(player)
-			if not session then
-				local text = player.Name or "Unknown"
-				LogError(("[DataStore] %s Profile not found."):format(text))
-				return
-			end
-			return session.Profile
-		end
-
-		local GetData = function(player: Player): (T & JSONAcceptable)?
-			local profile = GetProfile(player)
-			if not profile then
-				local text = player.Name or "Unknown"
-				LogError(("[DataStore] %s Data not found."):format(text))
-				return
-			end
-			return profile.Data
-		end
-
-		local GetLoadedProfiles = function(): { [number]: ProfileSession<T> }
-			return table.clone(StoreInfo.Keys)
-		end
-
-		local HasSession = function(player: Player): boolean
-			local key = player.UserId
-			if StoreInfo.Keys[key] ~= nil then
-				return true
-			end
-			return false
-		end
-
-		local SaveAll = function(): boolean?
-			local now = os.clock()
-			if not SaveAllCooldown or now >= SaveAllCooldown then
-				SaveAllCooldown = os.clock() + 60
-				local keys = StoreInfo.Keys
-				for _, session in pairs(keys) do
-					local profile = session.Profile
-					if profile:IsActive() then
-						profile:Save()
-					else
-						LogError(("[DataStore] Session (%s) is not active"):format(profile.Key))
-					end
-				end
-				return true
-			end
-			local left = SaveAllCooldown - now
-			LogError(("[DataStore] Time left on SaveAll cooldown: %s"):format(left))
-			return
-		end
-
-		--[[
-	Stores[storeName] = {
-		Store = {
-		    Store = store,
-			StartSessionAsync = StartSessionAsync,
-			WaitForSession = WaitForSession,
-			WaitForProfile = WaitForProfile,
-			WaitForData = WaitForData,
-			GetSession = GetSession,
-			GetProfile = GetProfile,
-			GetData = GetData,
-			GetLoadedProfiles = GetLoadedProfiles,
-			HasSession = HasSession,
-			SaveAll = SaveAll,
-			},
-		Keys = {},
-	}
-
-
-		return {
-			Store = store,
-			StartSessionAsync = StartSessionAsync,
-			WaitForSession = WaitForSession,
-			WaitForProfile = WaitForProfile,
-			WaitForData = WaitForData,
-			GetSession = GetSession,
-			GetProfile = GetProfile,
-			GetData = GetData,
-			GetLoadedProfiles = GetLoadedProfiles,
-			HasSession = HasSession,
-			SaveAll = SaveAll,
-		}
-	end
-
-	local new = NewStore()
-
-	StoreInfo.Store = new
-	Stores[storeName].Store = new
---]]
 	local self: StoreImplementation<T> = setmetatable(
 		{
 			Store = store,
@@ -636,49 +387,18 @@ function Store.StartSessionAsync<T>(
 
 	session.Profile = profile
 	session.StoreName = storeName
-	--[[
-	local EndSession = function(): ()
-		if profile:IsActive() then
-			profile:EndSession()
-		end
-		StoreInfo.Keys[key] = nil
-	end
 
-	local Save = function(priority: Priority): boolean?
-		if not profile:IsActive() then
-			LogError(("[DataStore] Session (%s) is not active"):format(profile.Key))
-			return
-		end
-		local now = os.clock()
-		if priority ~= "Low" and priority ~= "Normal" and priority ~= "High" then
-			priority = "Low"
-		end
-		if not SaveCooldown or priority == "High" then
-			SaveCooldown = now + 60
-			profile:Save()
-			return true
-		end
-
-		local difference = now - SaveCooldown
-		if priority == "Normal" and difference > -50 or priority == "Low" and difference > 0 then
-			SaveCooldown = now + 60
-			profile:Save()
-			return true
-		end
-		LogError(("[DataStore] Time left on Save cooldown: %s"):format(-1 * difference))
-		return
-	end
---]]
-	if DataStore.Settings.KickIfSessionLost then
-		profile.OnSessionEnd:Connect(function()
+	profile.OnSessionEnd:Connect(function()
+		Stores[storeName].Keys[key] = nil
+		if DataStore.Settings.KickIfSessionLost then
 			local text = DataStore.Settings.SessionLostMessage
 			if type(text) ~= "string" then
 				text = "Your data session has ended. Please rejoin."
 			end
 			player:Kick(text)
-		end)
-	end
-	Stores[storeName].Keys[key] = { Cooldowns = { Save = 0 }, Session = session :: any }
+		end
+	end)
+	Stores[storeName].Keys[key] = { Cooldowns = { Save = nil }, Session = session :: any }
 	return session :: any
 end
 
@@ -696,7 +416,7 @@ function Sessions.Save<T>(self: SessionImplementation<T>, priority: Priority): b
 	local StoreInfo = Stores[storeName]
 	local key = tonumber(profile.Key)
 	local SaveCooldown = StoreInfo.Keys[key].Cooldowns.Save
-	if SaveCooldown == 0 or priority == "High" then
+	if not SaveCooldown or priority == "High" then
 		StoreInfo.Keys[key].Cooldowns.Save = now + 60
 		profile:Save()
 		return true
@@ -714,13 +434,16 @@ end
 
 function Sessions.EndSession<T>(self: SessionImplementation<T>): ()
 	local profile = self.Profile
+
 	if profile:IsActive() then
 		profile:EndSession()
 	end
+
 	local storeName = self.StoreName
-	local StoreInfo = Stores[storeName]
-	local key = profile.Key
-	StoreInfo.Keys[key] = nil
+	local key = tonumber(profile.Key)
+
+	Stores[storeName].Keys[key] = nil
+	print(Stores)
 end
 
 function Store.WaitForSession<T>(self: StoreImplementation<T>, player: Player): ProfileSession<T>?
