@@ -20,9 +20,9 @@ ProfileStore provides the persistence primitive. This library adds a small appli
 See [Installation](https://github.com/vivuyr/DataStore/blob/master/docs/Installation.md).
 
 > [!WARNING]
-> Versions older than **0.0.2** contains critical issues and is **not recommended**.
+> Versions older than **0.0.3** contains critical issues and is **not recommended**.
 >
-> Please use **0.0.2** or later.
+> Please use **0.0.3** or later.
 
 ## Quick example
 
