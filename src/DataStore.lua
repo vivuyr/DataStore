@@ -1,20 +1,14 @@
 local Players = game:GetService("Players")
 local Packages = script.Parent.Parent
-local ServerScriptService = game:GetService("ServerScriptService")
 
 local RunService = game:GetService("RunService")
 
 if not RunService:IsServer() then
 	error("[DataStore] Cannot run on client")
-	return
+	return {} :: Data
 end
 
 local ProfileStore = require(Packages.ProfileStore)
-local DataStoreTypesModule = ServerScriptService.Server:FindFirstChild("DataStoreTypes")
-
-if DataStoreTypesModule then
-	DataStoreTypes = require(DataStoreTypesModule)
-end
 
 export type JSONAcceptable = { JSONAcceptable } | { [string]: JSONAcceptable } | number | string | boolean | buffer
 
@@ -149,7 +143,7 @@ export type StartConfiguration = {
 	Params: SessionParams?,
 }
 
-export type StoreName = DataStoreTypes.StoreName | string
+export type StoreName = string
 
 export type DataStoreState = "NotReady" | "Ready"
 
