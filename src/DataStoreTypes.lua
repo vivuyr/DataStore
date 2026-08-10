@@ -1,2 +1,2 @@
-export type StoreName = "PlayerData"
+export type StoreName = ""
 return {}
