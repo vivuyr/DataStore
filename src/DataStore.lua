@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local RunService = game:GetService("RunService")
 
 if not RunService:IsServer() then
+	error("[DataStore] Cannot run on client")
 	return
 end
 
