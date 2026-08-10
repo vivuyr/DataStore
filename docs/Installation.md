@@ -17,31 +17,12 @@ DataStore requires:
 - Roblox services and Luau runtime.
 - ProfileStore, exposed to the server as `ServerPackages.ProfileStore`.
 
-`DataStoreTypes` is optional. It provides additional Luau types that can improve type checking and autocomplete for store names and related configuration. The library can be used without it.
-
-If `DataStoreTypes` is used, it must export a `StoreName` type:
-
-```lua
-export type StoreName = "PlayerData"
-
-return {}
-```
-
-Add your store names to the union as needed:
-
-```lua
-export type StoreName = "PlayerData" | "Inventory" | "Settings"
-
-return {}
-```
-
 Rojo and Aftman are project tooling; they are not runtime dependencies of the module.
 
 ## Folder structure
 
 ```text
 ServerPackages/DataStore.lua    -- library module
-ServerScriptService/server/DataStoreTypes.lua   -- optional store-name type
 ServerPackages/ProfileStore.lua -- package entry point
 ServerPackages/_Index/...       -- Wally package contents
 ```
